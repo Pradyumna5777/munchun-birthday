@@ -200,18 +200,53 @@ export default function Home() {
         </motion.h2>
 
         {/* ═══ Big heading ═══ */}
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.85, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.7, type: 'spring', stiffness: 150 }}
-          className="font-fancy text-5xl sm:text-7xl md:text-8xl leading-tight mb-5"
-        >
-          <span className="text-gradient drop-shadow-[0_0_30px_rgba(255,143,171,0.4)]">
-            Happy Birthday
-          </span>
-          <br />
-          <span className="text-gradient">Munchun 💖</span>
-        </motion.h1>
+       <motion.h1
+  initial={{ opacity: 0, scale: 0.85, y: 20 }}
+  animate={{ opacity: 1, scale: 1, y: 0 }}
+  transition={{ delay: 0.7, type: 'spring', stiffness: 150 }}
+  className="font-fancy text-5xl sm:text-7xl md:text-8xl leading-tight mb-5"
+>
+  <span className="text-gradient drop-shadow-[0_0_30px_rgba(255,143,171,0.4)]">
+    Happy Birthday
+  </span>
+  <br />
+  <span className="text-gradient inline-flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
+    <span>Munchun</span>
+
+    {/* ═══ Red Pulsing Heart ═══ */}
+    <motion.span
+      className="inline-block"
+      animate={{
+        scale: [1, 1.18, 1, 1.12, 1],
+      }}
+      transition={{
+        duration: 1.6,
+        repeat: Infinity,
+        ease: 'easeInOut',
+        times: [0, 0.15, 0.3, 0.45, 1],
+      }}
+      style={{
+        filter:
+          'drop-shadow(0 0 12px rgba(220, 20, 60, 0.8)) drop-shadow(0 0 24px rgba(220, 20, 60, 0.4))',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        lineHeight: 1,
+        verticalAlign: 'middle',
+      }}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20"
+      >
+        <path
+          d="M12 21s-7.5-4.8-9.8-9.5C.4 8.2 2.2 4.5 5.8 3.7 8 3.2 10 4.2 12 6.7c2-2.5 4-3.5 6.2-3 3.6.8 5.4 4.5 3.6 7.8C19.5 16.2 12 21 12 21z"
+          fill="#dc143c"
+        />
+      </svg>
+    </motion.span>
+  </span>
+</motion.h1>
 
         {/* ═══ Divider with heart ═══ */}
         <motion.div
