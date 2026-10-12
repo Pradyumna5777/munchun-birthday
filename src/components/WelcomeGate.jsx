@@ -1,23 +1,31 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaPlay, FaGift } from 'react-icons/fa';
 
-// Floating background emojis
 const FLOAT_EMOJIS = ['💖', '🌸', '✨', '💕', '🎀', '💫', '🌷', '💗'];
 
-// Detect low-powered Android devices — reduce workload
 const IS_ANDROID =
   typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+
+const IS_LOW_END =
+  typeof navigator !== 'undefined' &&
+  (navigator.hardwareConcurrency || 4) <= 4;
 
 export default function WelcomeGate({ onEnter }) {
   const [show, setShow] = useState(true);
   const [leaving, setLeaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // ═══ Reduce counts on Android (flicker fix) ═══
-  const FLOATER_COUNT = IS_ANDROID ? 8 : 14;
-  const SPARKLE_COUNT = IS_ANDROID ? 14 : 30;
+  // ═══ Mount delay — browser ko render hone ka time do ═══
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
-  // Random floating emojis
+  // ═══ Reduce counts aggressively on Android ═══
+  const FLOATER_COUNT = IS_ANDROID ? (IS_LOW_END ? 5 : 8) : 14;
+  const SPARKLE_COUNT = IS_ANDROID ? (IS_LOW_END ? 8 : 14) : 30;
+
   const floaters = useMemo(
     () =>
       Array.from({ length: FLOATER_COUNT }, (_, i) => ({
@@ -32,7 +40,6 @@ export default function WelcomeGate({ onEnter }) {
     [FLOATER_COUNT]
   );
 
-  // Twinkling stars
   const sparkles = useMemo(
     () =>
       Array.from({ length: SPARKLE_COUNT }, (_, i) => ({
@@ -48,71 +55,85 @@ export default function WelcomeGate({ onEnter }) {
 
   const handleEnter = () => {
     setLeaving(true);
+    // Android pe thoda faster exit — less flicker window
+    const delay = IS_ANDROID ? 500 : 700;
     setTimeout(() => {
       setShow(false);
       onEnter?.();
-    }, 900);
+    }, delay);
   };
 
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 1 }}
-          exit={{
-            opacity: 0,
-            scale: 1.05, // 👈 reduced from 1.1 (less repaint)
-            // 👈 removed blur(10px) — main cause of Android flicker
-          }}
-          transition={{ duration: 0.7, ease: 'easeInOut' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }} // 👈 SIRF opacity — no scale, no blur
+          transition={{ duration: IS_ANDROID ? 0.4 : 0.7, ease: 'easeOut' }}
           className="fixed inset-0 z-[100] flex items-center justify-center 
-                     bg-gradient-to-br from-[#1a0a2e] via-[#2d0a3e] to-[#0f0116] 
                      px-4 overflow-hidden"
           style={{
-            // 👈 hint browser to composite on GPU
+            // 👈 Solid gradient via inline style (avoids Tailwind repaints)
+            background:
+              'linear-gradient(135deg, #1a0a2e 0%, #2d0a3e 50%, #0f0116 100%)',
+            // GPU layer promotion
             willChange: 'opacity',
             backfaceVisibility: 'hidden',
             transform: 'translateZ(0)',
+            // 👈 Isolate this layer — prevents parent repaints
+            isolation: 'isolate',
+            contain: 'strict',
           }}
         >
-          {/* ═══ Ambient glow blobs ═══ 
-              Reduced to 2 (Android), no motion on mobile — biggest flicker culprit */}
+          {/* ═══ Ambient glow blobs — STATIC on Android ═══ */}
           <div
-            className="absolute top-[-8rem] left-[-8rem] w-96 h-96 
-                       bg-pink-rose/25 rounded-full blur-2xl"
+            className="absolute top-[-8rem] left-[-8rem] w-96 h-96 rounded-full"
             style={{
-              // Static position for Android (no motion = no flicker)
-              transform: 'translateZ(0)',
-              willChange: IS_ANDROID ? 'auto' : 'transform',
+              background:
+                'radial-gradient(circle, rgba(255,143,171,0.25), transparent 70%)',
+              // 👈 No blur class — radial-gradient is cheaper
             }}
           />
           <div
-            className="absolute bottom-[-8rem] right-[-8rem] w-[28rem] h-[28rem] 
-                       bg-purple-soft/20 rounded-full blur-2xl"
+            className="absolute bottom-[-8rem] right-[-8rem] w-[28rem] h-[28rem] rounded-full"
             style={{
-              transform: 'translateZ(0)',
-              willChange: IS_ANDROID ? 'auto' : 'transform',
+              background:
+                'radial-gradient(circle, rgba(224,195,252,0.20), transparent 70%)',
             }}
           />
-          {/* 👈 Removed the 3rd blob — was adding repaint load */}
 
-          {/* ═══ Floating hearts layer ═══ */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* ═══ Floating layer — animated opacity on mount ═══ */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: mounted ? 1 : 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 pointer-events-none overflow-hidden"
+            style={{ willChange: 'opacity' }}
+          >
             {floaters.map((f) => (
               <motion.div
                 key={f.id}
-                className="absolute select-none opacity-50"
+                className="absolute select-none"
                 style={{
                   left: `${f.left}%`,
                   fontSize: f.size,
+                  opacity: 0.5,
                   willChange: 'transform',
-                  transform: 'translateZ(0)', // GPU layer
+                  // Force GPU layer
+                  transform: 'translate3d(0,0,0)',
+                  backfaceVisibility: 'hidden',
                 }}
                 initial={{ y: '110vh' }}
                 animate={{
                   y: '-15vh',
-                  x: [0, f.drift, 0, -f.drift, 0],
-                  rotate: [0, 20, 0, -20, 0],
+                  // 👈 Reduced motion complexity on Android
+                  x: IS_ANDROID
+                    ? [0, f.drift * 0.5, 0, -f.drift * 0.5, 0]
+                    : [0, f.drift, 0, -f.drift, 0],
+                  rotate: IS_ANDROID
+                    ? [0, 0, 0]
+                    : [0, 20, 0, -20, 0], // 👈 No rotation on Android
                 }}
                 transition={{
                   y: {
@@ -122,14 +143,17 @@ export default function WelcomeGate({ onEnter }) {
                     ease: 'linear',
                   },
                   x: { duration: f.duration / 2, repeat: Infinity, ease: 'easeInOut' },
-                  rotate: { duration: f.duration / 3, repeat: Infinity, ease: 'easeInOut' },
+                  rotate: {
+                    duration: f.duration / 3,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  },
                 }}
               >
                 {f.emoji}
               </motion.div>
             ))}
 
-            {/* Twinkling sparkles — no box-shadow (expensive on Android) */}
             {sparkles.map((s) => (
               <motion.div
                 key={s.id}
@@ -139,14 +163,14 @@ export default function WelcomeGate({ onEnter }) {
                   left: `${s.left}%`,
                   width: s.size,
                   height: s.size,
-                  // 👈 removed box-shadow — was causing per-frame repaints
                   opacity: 0.9,
-                  willChange: 'opacity, transform',
-                  transform: 'translateZ(0)',
+                  willChange: 'opacity',
+                  transform: 'translate3d(0,0,0)',
                 }}
                 animate={{
                   opacity: [0, 1, 0],
-                  scale: [0.4, 1.4, 0.4],
+                  // 👈 No scale on Android — opacity only
+                  scale: IS_ANDROID ? 1 : [0.4, 1.4, 0.4],
                 }}
                 transition={{
                   duration: s.duration,
@@ -156,33 +180,39 @@ export default function WelcomeGate({ onEnter }) {
                 }}
               />
             ))}
-          </div>
+          </motion.div>
 
-          {/* ═══ Main card ═══ */}
+          {/* ═══ Main card — content stays simple ═══ */}
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.94 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={
               leaving
-                ? { opacity: 0, y: -30, scale: 0.94 }
-                : { opacity: 1, y: 0, scale: 1 }
+                ? { opacity: 0, y: -30 }
+                : { opacity: mounted ? 1 : 0, y: mounted ? 0 : 30 }
             }
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
             className="relative z-10 text-center max-w-md w-full"
             style={{
               willChange: 'transform, opacity',
               transform: 'translateZ(0)',
             }}
           >
-            {/* Small tagline */}
+            {/* Tagline — using solid color instead of glass on Android */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 
-                         rounded-full glass text-xs text-pink-soft/90 tracking-wide"
+              className={`inline-flex items-center gap-2 px-4 py-1.5 mb-6 
+                         rounded-full text-xs text-pink-soft/90 tracking-wide
+                         ${IS_ANDROID ? 'border border-white/15' : 'glass'}`}
+              style={
+                IS_ANDROID
+                  ? { background: 'rgba(255,255,255,0.08)' }
+                  : undefined
+              }
             >
               <motion.span
-                animate={{ scale: [1, 1.3, 1] }}
+                animate={{ scale: [1, 1.25, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
                 💖
@@ -190,20 +220,20 @@ export default function WelcomeGate({ onEnter }) {
               <span>Ek chhota sa tohfa, sirf tumhare liye</span>
             </motion.div>
 
-            {/* ═══ Gift Box ═══ */}
+            {/* Gift Box */}
             <motion.div
               animate={
                 leaving
-                  ? { scale: 1.3, rotate: 12, opacity: 0 }
+                  ? { scale: 1.2, opacity: 0 }
                   : {
-                      scale: [1, 1.05, 1],       // 👈 reduced from 1.08
-                      rotate: [0, -3, 3, 0],     // 👈 reduced from -4/4
-                      y: [0, -6, 0],             // 👈 reduced from -10
+                      scale: [1, 1.04, 1],
+                      rotate: [0, -2, 2, 0],
+                      y: [0, -5, 0],
                     }
               }
               transition={
                 leaving
-                  ? { duration: 0.6 }
+                  ? { duration: 0.4 }
                   : {
                       scale: { repeat: Infinity, duration: 2.5, ease: 'easeInOut' },
                       rotate: { repeat: Infinity, duration: 4, ease: 'easeInOut' },
@@ -214,22 +244,32 @@ export default function WelcomeGate({ onEnter }) {
               style={{
                 willChange: 'transform',
                 transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
               }}
             >
-              {/* 👈 Single glow instead of two layers (less repaint) */}
-              <div className="absolute inset-0 rounded-full 
-                              bg-gradient-to-r from-pink-rose/40 to-purple-deep/40 
-                              blur-xl" />
+              {/* Glow — radial-gradient instead of blur */}
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(255,143,171,0.5), rgba(142,68,173,0.4) 40%, transparent 70%)',
+                }}
+              />
 
               {/* Gift icon */}
-              <div className="relative w-full h-full rounded-3xl 
-                              bg-gradient-to-br from-pink-rose via-purple-deep to-pink-deep 
-                              flex items-center justify-center 
-                              shadow-xl shadow-pink-rose/50 ring-1 ring-white/20"
-                   style={{ transform: 'translateZ(0)' }}>
+              <div
+                className="relative w-full h-full rounded-3xl 
+                            flex items-center justify-center 
+                            shadow-lg ring-1 ring-white/20"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #ff8fab 0%, #8e44ad 50%, #c9184a 100%)',
+                  transform: 'translateZ(0)',
+                }}
+              >
                 <FaGift className="text-white text-4xl sm:text-5xl" />
 
-                {/* 👈 Sparkle dots — using left/top instead of translate property */}
+                {/* Sparkle dots — static positions, animated opacity */}
                 {[0, 90, 180, 270].map((deg) => {
                   const rad = (deg * Math.PI) / 180;
                   const x = Math.cos(rad) * 36;
@@ -243,10 +283,9 @@ export default function WelcomeGate({ onEnter }) {
                         left: '50%',
                         marginLeft: x,
                         marginTop: y,
-                        // 👈 removed box-shadow — Android flicker culprit
                         opacity: 0.9,
                       }}
-                      animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 0.5] }}
+                      animate={{ opacity: [0, 1, 0] }}
                       transition={{
                         duration: 1.8,
                         repeat: Infinity,
@@ -259,7 +298,7 @@ export default function WelcomeGate({ onEnter }) {
               </div>
             </motion.div>
 
-            {/* ═══ Heading ═══ */}
+            {/* Heading */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -269,7 +308,7 @@ export default function WelcomeGate({ onEnter }) {
               Hey Munchun 💖
             </motion.h1>
 
-            {/* ═══ Subtext ═══ */}
+            {/* Subtext */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -283,7 +322,7 @@ export default function WelcomeGate({ onEnter }) {
               </span>
             </motion.p>
 
-            {/* ═══ CTA Button ═══ */}
+            {/* CTA */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -291,26 +330,32 @@ export default function WelcomeGate({ onEnter }) {
             >
               <motion.button
                 onClick={handleEnter}
-                whileHover={{ scale: 1.06 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={leaving}
                 className="group relative inline-flex items-center gap-3 px-8 py-4 
-                           rounded-full bg-gradient-to-r from-pink-rose via-purple-deep to-pink-deep 
-                           font-semibold text-white shadow-lg shadow-pink-rose/50 
-                           ring-1 ring-white/20 overflow-hidden transition"
+                           rounded-full font-semibold text-white 
+                           shadow-lg shadow-pink-rose/50 
+                           ring-1 ring-white/20 overflow-hidden"
                 style={{
+                  background:
+                    'linear-gradient(90deg, #ff8fab 0%, #8e44ad 50%, #c9184a 100%)',
                   willChange: 'transform',
                   transform: 'translateZ(0)',
                 }}
               >
-                {/* Shimmer sweep */}
                 <span className="absolute inset-0 -translate-x-full 
                                  group-hover:translate-x-full transition-transform duration-1000 
                                  bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-                {/* 👈 Reduced blur intensity on glow (was blur-xl) */}
+                {/* Pulsing glow — smaller on Android */}
                 <motion.span
-                  className="absolute inset-0 rounded-full bg-pink-rose/30 blur-lg"
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: IS_ANDROID
+                      ? 'rgba(255,143,171,0.25)'
+                      : 'radial-gradient(circle, rgba(255,143,171,0.4), transparent 70%)',
+                  }}
                   animate={{ opacity: [0.4, 0.7, 0.4] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 />
@@ -321,7 +366,7 @@ export default function WelcomeGate({ onEnter }) {
               </motion.button>
             </motion.div>
 
-            {/* ═══ Headphones hint ═══ */}
+            {/* Headphones hint */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -341,9 +386,11 @@ export default function WelcomeGate({ onEnter }) {
             </motion.div>
           </motion.div>
 
-          {/* ═══ Vignette overlay ═══ */}
-          <div className="absolute inset-0 pointer-events-none 
-                          bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]" />
+          {/* Vignette — removed on Android (radial-gradient overlay = expensive) */}
+          {!IS_ANDROID && (
+            <div className="absolute inset-0 pointer-events-none 
+                            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]" />
+          )}
         </motion.div>
       )}
     </AnimatePresence>
