@@ -282,3 +282,9 @@ a:focus-visible {
     display: none !important;
   }
 }
+
+/* ─── Confetti canvas safety (prevents leftover white pixels) ─── */
+canvas {
+  pointer-events: none !important;
+  image-rendering: pixelated;
+}

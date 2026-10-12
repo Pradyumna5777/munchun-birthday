@@ -386,7 +386,7 @@ function VoiceMessagePlayer() {
    ═══════════════════════════════════════════ */
 export default function Surprise() {
   const [stage, setStage] = useState('closed');
-  const [trigger, setTrigger] = useState(false);
+  const [trigger, setTrigger] = useState(0);
   const [letterStage, setLetterStage] = useState(0);
   const giftRef = useRef(null);
 
@@ -403,22 +403,19 @@ export default function Surprise() {
 
   const handleOpen = () => {
     burstFromElement(giftRef.current);
-    setTrigger(true);
-    setTimeout(() => setTrigger(false), 100);
+    setTrigger((t) => t + 1);
     setStage('opening');
     setTimeout(() => setStage('opened'), 800);
   };
 
   const replayConfetti = () => {
-    setTrigger(true);
-    setTimeout(() => setTrigger(false), 100);
+  setTrigger((t) => t + 1);
   };
 
   const nextLetterStage = () => {
     if (letterStage < LETTER_STAGES.length - 1) {
       setLetterStage((s) => s + 1);
-      setTrigger(true);
-      setTimeout(() => setTrigger(false), 100);
+      setTrigger((t) => t + 1);
     }
   };
 
