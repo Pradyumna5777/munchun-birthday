@@ -1,0 +1,284 @@
+@import "tailwindcss";
+
+/* ===========================
+   Tailwind v4 Theme Tokens
+   =========================== */
+@theme {
+  /* Fonts */
+  --font-fancy: "Great Vibes", cursive;
+  --font-elegant: "Playfair Display", serif;
+  --font-modern: "Poppins", sans-serif;
+
+  /* Pink palette */
+  --color-pink-soft: #ffe4ec;
+  --color-pink-rose: #ff8fab;
+  --color-pink-deep: #c9184a;
+
+  /* Purple palette */
+  --color-purple-soft: #e0c3fc;
+  --color-purple-deep: #8e44ad;
+
+  /* Extra accent colors */
+  --color-gold-soft: #ffe5a3;
+  --color-peach-soft: #ffd6c9;
+
+  /* Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 10s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-gradient: gradient 8s ease infinite;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  --animate-pulse-soft: pulse-soft 3s ease-in-out infinite;
+  --animate-spin-slow: spin-slow 20s linear infinite;
+  --animate-bob: bob 3s ease-in-out infinite;
+  --animate-heartbeat: heartbeat 1.5s ease-in-out infinite;
+
+  /* Keyframes */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-20px); }
+  }
+  @keyframes glow {
+    0%   { box-shadow: 0 0 20px #ff8fab; }
+    100% { box-shadow: 0 0 40px #c9184a, 0 0 60px #ff8fab; }
+  }
+  @keyframes gradient {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50%      { opacity: 0.9; transform: scale(1.05); }
+  }
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-8px) rotate(3deg); }
+  }
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    15%      { transform: scale(1.15); }
+    30%      { transform: scale(1); }
+    45%      { transform: scale(1.1); }
+    60%      { transform: scale(1); }
+  }
+}
+
+/* ===========================
+   Base
+   =========================== */
+* {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overflow-x: hidden;
+  font-family: "Poppins", sans-serif;
+  background: #0f0116;
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Selection */
+::selection {
+  background: rgba(255, 143, 171, 0.35);
+  color: #ffe4ec;
+}
+::-moz-selection {
+  background: rgba(255, 143, 171, 0.35);
+  color: #ffe4ec;
+}
+
+/* ===========================
+   Custom Scrollbar
+   =========================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #1a0a2e;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff8fab, #c9184a);
+  border-radius: 10px;
+  border: 2px solid #1a0a2e;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffb3c9, #ff8fab);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #ff8fab #1a0a2e;
+}
+
+/* ===========================
+   Focus States
+   =========================== */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #ff8fab;
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* ===========================
+   Utilities — v4 @utility
+   (Only SIMPLE classes here — no nested selectors!)
+   =========================== */
+
+/* Glass morphism */
+@utility glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@utility glass-strong {
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+@utility glass-dark {
+  background: rgba(15, 1, 22, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Animated gradient text */
+@utility text-gradient {
+  background: linear-gradient(90deg, #ff8fab, #e0c3fc, #ff8fab);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 4s linear infinite;
+}
+
+@utility text-gradient-warm {
+  background: linear-gradient(90deg, #ffb3c9, #ffe5a3, #ff8fab);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 5s linear infinite;
+}
+
+/* Soft text shadow */
+@utility text-shadow-glow {
+  text-shadow: 0 0 20px rgba(255, 143, 171, 0.6),
+               0 0 40px rgba(255, 143, 171, 0.3);
+}
+
+/* Shimmer effect */
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* Rounded glow ring */
+@utility glow-ring {
+  box-shadow: 0 0 20px rgba(255, 143, 171, 0.5),
+              0 0 40px rgba(255, 143, 171, 0.25);
+}
+
+@utility glow-ring-strong {
+  box-shadow: 0 0 30px rgba(255, 143, 171, 0.8),
+              0 0 60px rgba(255, 143, 171, 0.4),
+              0 0 90px rgba(201, 24, 74, 0.2);
+}
+
+/* Text ellipsis (2 lines) */
+@utility line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ===========================
+   Reusable keyframes (standalone)
+   =========================== */
+@keyframes gradient {
+  to { background-position: 200% center; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50%      { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ===========================
+   Plain CSS helpers (NOT @utility)
+   (Needed for pseudo-selectors like ::-webkit-scrollbar)
+   =========================== */
+
+/* No scrollbar (for horizontal scroll areas) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ===========================
+   Accessibility
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===========================
+   Print styles
+   =========================== */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
