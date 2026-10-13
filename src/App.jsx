@@ -12,6 +12,9 @@ import Gallery from './pages/Gallery';
 import Memories from './pages/Memories';
 import Surprise from './pages/Surprise';
 import { MusicProvider } from './context/MusicContext';
+import FloatingBalloons from './components/FloatingBalloons';
+import WalkingMascot from './components/WalkingMascot';
+import EmojiRain from './components/EmojiRain';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -108,6 +111,9 @@ export default function App() {
 
       <div className="relative min-h-screen bg-gradient-to-br from-[#1a0a2e] via-[#2d0a3e] to-[#0f0116] overflow-hidden">
         <FloatingHearts />
+        <FloatingBalloons />
+        <WalkingMascot />
+        <EmojiRain />
 
         {entered && <MusicPlayer playSignal={entered} />}
 

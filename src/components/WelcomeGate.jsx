@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaPlay, FaGift } from 'react-icons/fa';
+ import confetti from 'canvas-confetti';
 
 const FLOAT_EMOJIS = ['💖', '🌸', '✨', '💕', '🎀', '💫', '🌷', '💗'];
 
@@ -53,15 +54,24 @@ export default function WelcomeGate({ onEnter }) {
     [SPARKLE_COUNT]
   );
 
-  const handleEnter = () => {
-    setLeaving(true);
-    // Android pe thoda faster exit — less flicker window
-    const delay = IS_ANDROID ? 500 : 700;
-    setTimeout(() => {
-      setShow(false);
-      onEnter?.();
-    }, delay);
-  };
+const handleEnter = () => {
+  setLeaving(true);
+
+  // 🎊 Confetti burst from center
+  confetti({
+    particleCount: 100,
+    spread: 100,
+    origin: { y: 0.6 },
+    colors: ['#ff8fab', '#c9184a', '#e0c3fc', '#8e44ad'],
+    disableForReducedMotion: true,
+  });
+
+  const delay = IS_ANDROID ? 500 : 700;
+  setTimeout(() => {
+    setShow(false);
+    onEnter?.();
+  }, delay);
+};
 
   return (
     <AnimatePresence>
@@ -69,7 +79,11 @@ export default function WelcomeGate({ onEnter }) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }} // 👈 SIRF opacity — no scale, no blur
+        exit={{
+  opacity: 0,
+  scale: IS_ANDROID ? 1 : 1.05,
+  filter: IS_ANDROID ? 'none' : 'blur(4px)',
+}}
           transition={{ duration: IS_ANDROID ? 0.4 : 0.7, ease: 'easeOut' }}
           className="fixed inset-0 z-[100] flex items-center justify-center 
                      px-4 overflow-hidden"

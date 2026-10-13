@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { TypeAnimation } from 'react-type-animation';
 import { FaBirthdayCake, FaGift, FaHeart, FaStar, FaMusic } from 'react-icons/fa';
+import DancingCharacters from '../components/DancingCharacters';
 
 // Rotating greeting lines
 const GREETINGS = [
@@ -259,6 +260,9 @@ export default function Home() {
           <FaHeart className="text-pink-rose text-xs animate-pulse" />
           <span className="w-12 sm:w-20 h-[1px] bg-gradient-to-l from-transparent to-pink-rose/60" />
         </motion.div>
+
+        <DancingCharacters />
+
 
         {/* ═══ Typing animation ═══ */}
         <motion.div
